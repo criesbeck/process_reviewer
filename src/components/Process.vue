@@ -91,6 +91,7 @@
             this.$set(option, 'inUse',  !option.inUse);
             this.$firebaseRefs['changes'].push({
               time: Date.now(),
+              process: process.id,
               practice: practice.id,
               option: option.label,
               inUse: option.inUse,

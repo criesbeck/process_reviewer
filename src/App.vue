@@ -5,33 +5,53 @@
     </header>
     <main>
       <aside class="sidebar">
-        <router-link class="link" v-bind:to="{ name: 'dashboard' }">
-          Dashboard
-        </router-link>
-        <router-link
-          v-for="process in processes"
-          v-bind:key="process"
-          active-class="is-active"
-          class="link"
-          v-bind:to="{ name: 'process', params: { id: process } }">
-        {{process}}
-      </router-link>
+        <div v-if="user">
+          <div>{{user.email}}</div>
+          <button v-on:click="signOut">Sign out</button>
+          <hr>
+          <router-link class="link" v-bind:to="{ name: 'dashboard' }">
+            Dashboard
+          </router-link>
+          <router-link v-for="process in processes"
+            v-bind:key="process"
+            active-class="is-active"
+            class="link"
+            v-bind:to="{ name: 'process', params: { id: process } }">
+            {{process}}
+          </router-link>
+        </div>
       </aside>
-      <div class="content">
+      <div class="content" v-if="user">
         <router-view></router-view>
+      </div>
+      <div class="content" v-else>
+        <form>
+          <label>Email: <input type="text" class="user_name" id="user_id"></label>
+          <label>Password: <input type="password" id="user_password"></label>
+          <button v-on:click="signIn">Sign in</button>
+        </form>
       </div>
     </main>
   </div>
 </template>
 
 <script>
+  import { firebase } from './firebase'
+  import * as firebaseui from 'firebaseui' 
   import { getProcessIds } from './processes'
 
   export default {
     data () {
       return {
+        user: null,
         processes: []
       }
+    },
+    
+    beforeCreate() {
+      firebase.auth().onAuthStateChanged(function(user) {
+        this.user = user;
+      }.bind(this))
     },
 
     created() {
@@ -42,7 +62,22 @@
       fetchData() {
         console.log('getting process ids')
         getProcessIds().then(ids => this.processes = ids)
-      }
+      },
+
+      signIn() {
+        console.log('sign in')
+        const userId = document.getElementById('user_id').value;
+        const password = document.getElementById('user_password').value;
+        firebase.auth()
+          .signInWithEmailAndPassword(userId, password)
+          .catch(function(error) {
+            console.log(error);
+          });
+      },
+
+      signOut() {
+        firebase.auth().signOut();
+      },
     },
 
   }
@@ -108,5 +143,8 @@
     text-transform: capitalize;
     margin-bottom: 10px;
     color: #2c3e50;
+  }
+  .user_name {
+    width: 20em;
   }
 </style>
