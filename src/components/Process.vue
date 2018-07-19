@@ -85,17 +85,24 @@
           && this.changeSummary[practice.id][option.label].inUse;
       },
 
+      makeChangeRecord(process, practice, option, facet) {
+        return {
+          time: Date.now(),
+          process: process.id,
+          practice: practice.id,
+          option: option.label,
+          facet,
+          value: option[facet],
+        };
+      },
+
       toggleOptionUse(practice, label) {
         practice.options.forEach(option => {
           if (option.label === label) {
-            this.$set(option, 'inUse',  !option.inUse);
-            this.$firebaseRefs['changes'].push({
-              time: Date.now(),
-              process: process.id,
-              practice: practice.id,
-              option: option.label,
-              inUse: option.inUse,
-            })
+            const facet = 'inUse';
+            this.$set(option, facet,  !option[facet]);
+            this.$firebaseRefs['changes']
+              .push(this.makeChangeRecord(this.process, practice, option, facet));
           }
         })
       },
@@ -120,8 +127,8 @@
       },
 
       mergeChange(changeObj, change) {
-        this.forceKeys(changeObj, change.practice, change.option).inUse = change.inUse;
-        console.log(change.time + ': ' + change.practice + ' ' + change.option + ' = ' + change.inUse)
+        this.forceKeys(changeObj, change.practice, change.option)[change.facet] = change.value;
+        console.log(`${change.time}: ${change.practice}.${change.option}.${change.facet} = ${change.value}`);
         return changeObj;
       },
 
